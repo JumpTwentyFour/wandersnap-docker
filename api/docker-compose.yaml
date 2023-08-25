@@ -7,7 +7,7 @@ services:
     container_name: wandersnap_nginx_api
     platform: linux/arm64
     environment:
-      - VIRTUAL_HOST=wandersnap-api.test
+      VIRTUAL_HOST: wandersnap-api.test
     build:
       context: ./nginx
       dockerfile: Dockerfile
