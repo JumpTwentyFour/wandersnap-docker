@@ -17,16 +17,28 @@ the .env file you will be using in this repository
 - change both the variables in the `.env` file to point to the above installed repositories
 - `docker compose build`
 - `docker compose up -d`
-- `docker compose exec php composer install`
-- `docker compose exec php php artisan key:generate`
-- `docker compose exec php php artisan migrate`
 
+## Installing Dependencies
+As there are two codebases that power this application you will need to run composer install on both of these
+
+### API Dependencies
+- `docker compose exec api composer install`
+- `docker compose exec api php artisan key:generate`
+- `docker compose exec api php artisan migrate`
+
+### Admin Portal Dependencies
+- `docker compose exec admin composer install`
+- `docker compose exec admin php artisan key:generate`
+- `docker compose exec admin php artisan migrate`
+- 
 The admin panel should be available at
 The API should be available at
 
 ## Running commands
 
-Run artisan commands with: `docker compose exec php php artisan <command>`
+Run artisan commands within each container:-
+- `docker compose exec admin php artisan <command>`
+- `docker compose exec api php artisan <command>`
 
 ## Tests
 
