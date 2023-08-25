@@ -19,8 +19,8 @@ the .env file you will be using in this repository
 
 - `cp .env.example .env`
 - change both the variables in the `.env` file to point to the above installed repositories
-- `docker compose build`
-- `docker compose up -d`
+
+Once this is done run `sh setup.sh` this command will setup the docker containers
 
 ## Installing Dependencies
 As there are two codebases that power this application you will need to run composer install on both of these

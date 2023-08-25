@@ -1,0 +1,43 @@
+# https://docs.docker.com/compose/compose-file/#/versioning
+version: '3.8'
+
+services:
+  nginx_admin:
+    # https://hub.docker.com/_/nginx
+    container_name: wandersnap_nginx_admin
+    platform: linux/arm64
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - admin
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/config/:/etc/nginx/conf.d/
+      - ./nginx/certs/:/etc/nginx/ssl/
+    working_dir: /var/www/vhost/
+    environment:
+      - VIRTUAL_HOST=wandersnap-admin.test
+    expose:
+      - '80:80'
+      - '443:443'
+
+  admin:
+    # https://hub.docker.com/_/php
+    container_name: wandersnap_admin
+    build: ./php
+    environment:
+      PHP_MEMORY_LIMIT: '256M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      VIRTUAL_HOST: wandersnap-admin.test
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+    working_dir: /var/www/vhost/admin
+
+
+
+networks:
+  default:
+    name: wandersnap_network
+    external: true
