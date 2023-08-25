@@ -5,6 +5,10 @@
 - Docker (https://docs.docker.com/get-docker/)
 
 ## Setup
+Run the below command to setup the required hostnames for the application:-
+
+`sh setup-hostnames.sh`
+
 Before running any docker commands you will first need to download the two repositories required for this application these are as follows
 
 - API - https://github.com/JumpTwentyFour/wandersnap-api

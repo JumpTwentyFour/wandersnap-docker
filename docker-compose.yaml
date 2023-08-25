@@ -15,7 +15,7 @@ services:
       - ${WANDERSNAP_API_CODEBASE}:/var/www/vhost/api:cached
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/conf.d/:/etc/nginx/conf.d/
-      - ./nginx/ssl/:/etc/nginx/ssl/
+      - ./nginx/certs/:/etc/nginx/ssl/
     working_dir: /var/www/vhost/
     ports:
       - '80:80'
