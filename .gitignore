@@ -1,1 +1,7 @@
 /.idea
+.env
+/docker/mysql/data
+/.env
+/docker/redis/data
+/docker/nginx
+/docker/php
