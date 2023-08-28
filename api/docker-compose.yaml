@@ -4,7 +4,7 @@ version: '3.8'
 services:
   nginx_api:
     # https://hub.docker.com/_/nginx
-    container_name: wandersnap_nginx_api
+    container_name: wandersnap_api_nginx
     platform: linux/arm64
     environment:
       VIRTUAL_HOST: wandersnap-api.test
@@ -38,7 +38,7 @@ services:
 
   mysql:
     # https://hub.docker.com/r/mysql/mysql-server/
-    container_name: wandersnap_mysql
+    container_name: wandersnap_api_mysql
     image: mysql/mysql-server:latest
     platform: linux/arm64
     volumes:
@@ -54,10 +54,20 @@ services:
     ports:
       - "4406:3306"
 
+  redis:
+    image: redis:6.2.5
+    container_name: wandersnap_api_redis
+    platform: linux/arm64
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker/redis/data:/data
+    restart: always
+
   mailpit:
     image: axllent/mailpit
     platform: linux/amd64
-    container_name: wandersnap_mailpit
+    container_name: wandersnap_api_mailpit
     ports:
       - "1025:1025"
       - "8025:8025"
