@@ -1,8 +1,10 @@
 /.idea
 .env
-/docker/mysql/data
+/api/docker/mysql/data
+/api/docker/redis/data
 /.env
-/docker/redis/data
+/admin/docker/redis/data
 /docker/nginx
 /docker/php
 /api/docker
+/admin/docker
