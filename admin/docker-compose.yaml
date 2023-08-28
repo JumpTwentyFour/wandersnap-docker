@@ -35,6 +35,27 @@ services:
       - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
     working_dir: /var/www/vhost/admin
 
+  horizon:
+    container_name: wandersnap_admin_horizon
+    image: wandersnap-admin-horizon
+    build:
+      context: ./php
+    working_dir: /var/www/vhost/
+    user: "www-data:www-data"
+    environment:
+      PHP_MEMORY_LIMIT: '128M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      QUEUE_CONNECTION: 'redis'
+      REDIS_HOST: 'redis'
+    depends_on:
+      - redis
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+      - ./php/worker:/etc/supervisor/conf.d
+      - ./php/local/supervisord/logs:/etc/supervisor/logs
+      - ./php/local/supervisord/pid:/etc/supervisor/pid
+    command: [ "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/horizon.conf", "-u", "www-data", "-l", "/etc/supervisor/logs/supervisord.log", "-j", "/etc/supervisor/pid/supervisord.pid" ]
+
 
 
 networks:
