@@ -1,0 +1,79 @@
+# https://docs.docker.com/compose/compose-file/#/versioning
+version: '3.8'
+
+services:
+  nginx_admin:
+    # https://hub.docker.com/_/nginx
+    container_name: wandersnap_admin_nginx
+    platform: linux/arm64
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - admin
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/config/:/etc/nginx/conf.d/
+      - ./nginx/certs/:/etc/nginx/ssl/
+    working_dir: /var/www/vhost/
+    environment:
+      - VIRTUAL_HOST=wandersnap-admin.test
+    expose:
+      - '80:80'
+      - '443:443'
+
+  admin:
+    # https://hub.docker.com/_/php
+    container_name: wandersnap_admin
+    build: ./php
+    environment:
+      PHP_MEMORY_LIMIT: '256M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      VIRTUAL_HOST: wandersnap-admin.test
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+    working_dir: /var/www/vhost/admin
+
+  horizon:
+    container_name: wandersnap_admin_horizon
+    image: wandersnap-admin-horizon
+    build:
+      context: ./php
+    working_dir: /var/www/vhost/
+    user: "www-data:www-data"
+    environment:
+      PHP_MEMORY_LIMIT: '128M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      QUEUE_CONNECTION: 'redis'
+      REDIS_HOST: 'redis'
+    depends_on:
+      - redis
+    volumes:
+      - ${WANDERSNAP_ADMIN_CODEBASE}:/var/www/vhost/admin:cached
+      - ./php/worker:/etc/supervisor/conf.d
+      - ./php/local/supervisord/logs:/etc/supervisor/logs
+      - ./php/local/supervisord/pid:/etc/supervisor/pid
+    command: [ "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/horizon.conf", "-u", "www-data", "-l", "/etc/supervisor/logs/supervisord.log", "-j", "/etc/supervisor/pid/supervisord.pid" ]
+
+  redis:
+    image: redis:6.2.5
+    container_name: wandersnap_admin_redis
+    platform: linux/arm64
+    ports:
+      - "6378:6379"
+    volumes:
+      - ./docker/redis/data:/data
+    restart: always
+
+  mailpit:
+    image: axllent/mailpit
+    platform: linux/amd64
+    container_name: wandersnap_admin_mailpit
+    ports:
+      - "1026:1025"
+      - "8026:8025"
+networks:
+  default:
+    name: wandersnap_network
+    external: true

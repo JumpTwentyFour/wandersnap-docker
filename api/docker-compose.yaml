@@ -1,0 +1,102 @@
+# https://docs.docker.com/compose/compose-file/#/versioning
+version: '3.8'
+
+services:
+  nginx_api:
+    # https://hub.docker.com/_/nginx
+    container_name: wandersnap_api_nginx
+    platform: linux/arm64
+    environment:
+      VIRTUAL_HOST: wandersnap-api.test
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - api
+    volumes:
+      - ${WANDERSNAP_API_CODEBASE}:/var/www/vhost/api:cached
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/config/:/etc/nginx/conf.d/
+      - ./nginx/certs/:/etc/nginx/ssl/
+    working_dir: /var/www/vhost/api
+    expose:
+      - '80:80'
+      - '443:443'
+
+  api:
+    # https://hub.docker.com/_/php
+    container_name: wandersnap_api
+    platform: linux/arm64
+    build: ./php
+    environment:
+      PHP_MEMORY_LIMIT: '256M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      VIRTUAL_HOST: wandersnap-api.test
+    volumes:
+      - ${WANDERSNAP_API_CODEBASE}:/var/www/vhost/api:cached
+    working_dir: /var/www/vhost/api
+
+  mysql:
+    # https://hub.docker.com/r/mysql/mysql-server/
+    container_name: wandersnap_api_mysql
+    image: mysql/mysql-server:latest
+    platform: linux/arm64
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'root'
+      MYSQL_DATABASE: 'wandersnap_api'
+      MYSQL_USER: 'wandersnap_api'
+      MYSQL_PASSWORD: 'wandersnap_api'
+      MYSQL_ROOT_HOST: '%'
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "4406:3306"
+
+  redis:
+    image: redis:6.2.5
+    container_name: wandersnap_api_redis
+    platform: linux/arm64
+    ports:
+      - "6377:6379"
+    volumes:
+      - ./docker/redis/data:/data
+    restart: always
+
+  mailpit:
+    image: axllent/mailpit
+    platform: linux/amd64
+    container_name: wandersnap_api_mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  horizon:
+    container_name: wandersnap_api_horizon
+    image: wandersnap-horizon
+    build:
+      context: ./php
+    working_dir: /var/www/vhost/
+    user: "www-data:www-data"
+    environment: 
+      PHP_MEMORY_LIMIT: '128M'
+      COMPOSER_MEMORY_LIMIT: '-1'
+      QUEUE_CONNECTION: 'redis'
+      REDIS_HOST: 'redis'
+    depends_on:
+      - redis
+    volumes:
+      - ${WANDERSNAP_API_CODEBASE}:/var/www/vhost/api:cached
+      - ./php/worker:/etc/supervisor/conf.d
+      - ./php/local/supervisord/logs:/etc/supervisor/logs
+      - ./php/local/supervisord/pid:/etc/supervisor/pid
+    command: [ "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/horizon.conf", "-u", "www-data", "-l", "/etc/supervisor/logs/supervisord.log", "-j", "/etc/supervisor/pid/supervisord.pid" ]
+
+volumes:
+  wandersnap_network-mysql-data-volume:
+
+networks:
+  default:
+    name: wandersnap_network
+    external: true

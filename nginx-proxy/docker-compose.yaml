@@ -1,0 +1,19 @@
+# https://docs.docker.com/compose/compose-file/#/versioning
+version: '3.8'
+
+services:
+  nginx_proxy:
+    container_name: wandersnap_nginx_proxy
+    build:
+      context: ./
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+
+networks:
+  default:
+    name: wandersnap_network
+    external: true
